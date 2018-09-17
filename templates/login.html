@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<div id="jav">
+	<script type="text/javascript">
+
+		$(document).ready(function() {
+			$('#logData').submit(function(event) {
+				event.preventDefault();
+
+				var uname = document.getElementById('name').value;
+				var pass = document.getElementById('password').value;
+
+
+				//Validation checks
+				error = false;
+				errors = []
+
+				if (uname == '' || pass == ''){
+					error = true;
+					errors.push('*All fields must be filled out to log in*')
+				}//blank entries error 
+
+
+				if (error){
+					htstr = "";
+					var i = 0;
+					for (i; i < errors.length; ++i){
+						htstr += "<p style='color:red;'>" + errors[i] + "</p>";
+					}//for 
+
+					$("#errors").html(htstr);
+				}//sending errors
+
+				else {
+					var userdata = {
+						username: uname,
+						password: pass
+					}
+
+					$.ajax({
+						type: "POST",
+						contentType: "application/json; charset=UTF-8",
+						data: JSON.stringify(userdata),
+						url: "{{url_for('api.loginApi')}}",
+						success: function(data){
+							// console.log(data)
+							window.location.href = "{{url_for('home.home_route')}}";
+						},
+						error: function(error){
+							// console.log(error.responseText);
+							$("#errors").html("<p style='color:red;'>" + "\*" + error.responseText.slice(1, -2) + "\*" + "</p>");
+
+							//need to handle these error messages
+						}
+
+
+					});//ajax call
+				}//else
+
+			}); //submit function
+		}); //document.ready
+	
+	</script>
+</div>
+
+
+<div class="loginForm">
+	<form class="pure-form-aligned" id="logData">
+		<fieldset>
+			<legend>Please sign in to the Halo Account Manager Website</legend>
+
+			<div class="pure-control-group" id="errors"></div>
+
+			<div class="pure-control-group">
+				<label for="name">Username</label>
+				<input id="name" type="text" placeholder="Username">
+			</div>
+
+			<div class="pure-control-group">
+				<label for="password">Password</label>
+				<input id="password" type="password" placeholder="Password">
+			</div>
+
+			<div class="pure-controls">
+				<button type="submit" class="pure-button pure-button-primary">Sign in</button>
+			</div>
+
+		</fieldset>
+	</form>
+</div>
+
+<div class="head-to-create">
+	
+	<p>Don't have an account? Make one <a href="{{url_for('home.create_route')}}"><button class="button-warning pure-button" style="background: #089BF7; padding:6.5px;">here.</button></a></p>
+
+</div>
+
+
+{% endblock %}

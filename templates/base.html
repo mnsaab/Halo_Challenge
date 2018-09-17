@@ -1,0 +1,193 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+	
+	<link rel="stylesheet" href="{{url_for('static', filename='css/base.css')}}">
+</head>
+
+<body>
+
+	<div class="header">
+		<div class="header-title">
+			<h1>Halo Balance Manager</h1>
+		</div>
+	</div>
+
+	<div class="log-status" id="banner">
+	{% if 'username' not in session %}
+		<p>Not logged in. <br> <a href="{{url_for('home.login_route')}}">Log in here</a></p>
+	{% endif %}
+
+	{% if 'username' in session %}
+		<p>Logged in as {{session.username}}</p>
+		<a href="{{url_for('api.logoutApi')}}"><button class="pure-button" id="logout">Sign Out</button></a>
+	{% endif %}
+	</div>
+
+
+{% block content %}
+
+	
+	<div id="jav">
+		<script type="text/javascript">
+
+			$(document).ready(function() {
+
+
+				//Gather balance for user's account 
+				$.ajax({
+					type: "GET",
+					contentType: "application/json; charset=UTF-8",
+					data: {},
+					url: "{{url_for('api.homeApi')}}",
+					success: function(data){
+
+						var balance = data['balance'];
+
+						if (balance > 0){
+							$("#balance").html("<p style='color:green;'>$" + balance + "</p>");
+						}
+	
+						else if (balance == 0){
+							$("#balance").html("<p>$" + balance + "</p>");
+						}
+
+						else {
+							$("#balance").html("<p style='color:red;'>$" + balance + "</p>");
+						}
+
+					},
+					error: function(error){
+						$("#balance").html("<p style='color:red;'> \*Could not retrieve account balance\* </p>");
+						// console.log(error.responseText);
+					}
+				});//ajax call
+
+
+				//Initiating the change in account balance
+				$("#editFunds").click(function(){
+					$(".changeAmount").toggle();
+				});
+
+
+				$('#deposit, #withdraw').click(function(event) {
+					event.preventDefault();
+
+					var deposit = false;
+					var withdraw = false;
+					var clicked = event.target.id;
+
+					if (clicked == "deposit"){
+						deposit = true;
+						withdraw = false;
+					}//if
+
+					else if (clicked == "withdraw"){
+						deposit = false;
+						withdraw = true;
+					}//if
+
+					var amnt = document.getElementById('amount').value;
+
+					//Validation checks
+					var error = false;
+					errors = []
+
+					if (amnt == ''){
+						error = true;
+						errors.push('*Please specify how much you would like to deposit or withdraw*')
+					}//blank entries error 
+
+
+					if (error){
+						htstr = "";
+						var i = 0;
+						for (i; i < errors.length; ++i){
+							htstr += "<p style='color:red;'>" + errors[i] + "</p>";
+						}//for 
+
+						$("#errors").html(htstr);
+					}//sending errors
+
+					else {
+						var userdata = {
+							amount: amnt,
+							dsit: deposit, 
+							wdraw: withdraw
+						}
+
+						$.ajax({
+							type: "SET",
+							contentType: "application/json; charset=UTF-8",
+							data: JSON.stringify(userdata),
+							url: "{{url_for('api.homeApi')}}",
+							success: function(data){
+								// console.log(data)
+								window.location.href = "{{url_for('home.home_route')}}";
+
+							},
+							error: function(error){
+								// console.log(error.responseText);
+								var eresponse = error.responseText;
+								eresponse = eresponse.replace(/\\/g, "");
+								$("#errors").html("<p style='color:red;'>" + eresponse + "</p>");
+
+								//need to handle these error messages
+							}
+
+
+						});//ajax call
+					}//else
+				}); //submit function
+
+			}); //document.ready
+
+		</script>
+	</div>
+
+	<div class="main-container">
+
+		<div id="balanceInfo">
+			<p><u>Account Balance:</u></p>
+			<div id="balance">
+				
+			</div>
+		</div>
+		
+		<button class="pure-button" id="editFunds">Edit Balance</button><br>
+		<div class="changeAmount" style="display: none">
+			<form class="pure-form-aligned" id="logData2">
+
+					<div class="pure-control-group" id="errors"></div>
+
+					<div class="pure-control-group">
+						<input id="amount" type="text" placeholder="Amount (in US Dollars)">
+					</div>
+
+
+					<div class="pure-controls" id="fundButtons">
+						<button class="pure-button pure-button-primary" id="deposit" style="background: green;">Deposit</button>
+						<button class="pure-button pure-button-primary" id="withdraw" style="background: red;">Withdraw</button>
+					</div>
+
+			</form>
+		</div>
+
+
+		<br><br>
+
+		<div class="resultList">
+			
+		</div>
+		
+ 
+	</div>
+
+
+{% endblock %}
+</body>
+</html>

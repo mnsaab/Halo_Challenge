@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block content %}
+<div id="jav">
+	<script type="text/javascript">
+
+		$(document).ready(function() {
+			$('#new-data').submit(function(event) {
+				event.preventDefault();
+
+				var fname = document.getElementById('firstName').value;
+				var lname = document.getElementById('lastName').value;
+				var uname = document.getElementById('username').value;
+				var pass1 = document.getElementById('password1').value;
+				var pass2 = document.getElementById('password2').value;
+
+
+				//Validation checks
+				error = false;
+				errors = []
+
+				if (fname == '' || lname == '' || uname == '' || pass1 == '' || pass2 == ''){
+					error = true;
+					errors.push('*All fields must be filled out to create an account*')
+				}//blank entries error 
+
+
+				if (pass1.length < 5){
+					error = true;
+					errors.push('*Passwords must have at least 5 characters*')
+				}
+
+
+				if (pass1 != pass2){
+					error = true;
+					errors.push('*The passwords do not match. Please re-enter them*')
+				}//
+
+
+				if (error){
+					htstr = "";
+					var i = 0;
+					for (i; i < errors.length; ++i){
+						htstr += "<p style='color:red;'>" + errors[i] + "</p>";
+					}//for 
+
+					$("#errors").html(htstr);
+				}//sending errors
+
+				else {
+					var userdata = {
+						username: uname,
+						firstname: fname,
+						lastname: lname,
+						password: pass1
+					}
+
+					$.ajax({
+						type: "POST",
+						contentType: "application/json; charset=UTF-8",
+						data: JSON.stringify(userdata),
+						url: "{{url_for('api.createApi')}}",
+						success: function(data){
+							// console.log(data)
+							window.location.href = "{{url_for('home.login_route')}}";
+						},
+						error: function(error){
+							$("#errors").html("<p style='color:red;'>" + "\*" + error.responseText.slice(1, -2) + "\*" + "</p>");
+							// console.log(error.responseText);
+							//need to handle these error messages
+						}
+
+
+					});//ajax call
+				}//else
+
+			}); //submit function
+		}); //document.ready
+	
+	</script>
+</div>
+
+<div class="create-account-form">
+	<form class="pure-form-aligned" id="new-data">
+		<fieldset>
+			<legend>Please fill in the form to create an account</legend>
+
+			<div class="pure-control-group" id="errors"></div>
+
+			<div class="pure-control-group">
+				<label for="firstName">First Name</label>
+				<input id="firstName" type="text" placeholder="First Name">
+			</div>
+
+			<div class="pure-control-group">
+				<label for="lastName">Last Name</label>
+				<input id="lastName" type="text" placeholder="Last Name">
+			</div>
+
+			<div class="pure-control-group">
+				<label for="username">Username</label>
+				<input id="username" type="text" placeholder="Username">
+			</div>
+
+			<div class="pure-control-group">
+				<label for="password1">Password</label>
+				<input id="password1" type="password" placeholder="Password1">
+			</div>
+
+			<div class="pure-control-group">
+				<label for="password2">Re-enter password</label>
+				<input id="password2" type="password" placeholder="Password2">
+			</div>
+
+			<div class="pure-controls">
+				<button type="submit" class="pure-button pure-button-primary">Create Account</button>
+			</div>
+
+		</fieldset>
+	</form>
+</div>
+
+
+{% endblock %}
